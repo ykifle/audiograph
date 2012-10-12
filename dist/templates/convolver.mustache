@@ -1,0 +1,13 @@
+<div class="node convolver">
+    <div class="node-name">Convolver</div>
+    <select class="ir-list">
+        <option class="no-file">Select a file</option>
+        <option class="upload-file">Upload New File</option>
+        {{#impulseResponseFiles}}
+            <option class="audio-file" data-url="{{url}}">{{name}}</option>
+        {{/impulseResponseFiles}}
+        {{#defaultImpulseResponseFiles}}
+            <option class="audio-file" data-url="{{url}}">{{name}}</option>
+        {{/defaultImpulseResponseFiles}}
+    </select>
+</div>
