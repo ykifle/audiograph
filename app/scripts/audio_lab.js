@@ -35,7 +35,64 @@ function(Pubsub) {
         COMPRESSOR: "compressor",
         BIQUAD_FILTER: "biquad_filter"
     };
-    
+
+    var nodeConfigs = {
+        crossfade: {
+            nodes: [
+                {
+                    id: 0,
+                    type: NODES.GAIN
+                },
+                {
+                    id: 1,
+                    type: NODES.GAIN
+                },
+                {
+                    id: 2,
+                    type: NODES.GAIN
+                }
+            ],
+            connections: [
+                {
+                    source: 0,
+                    target: 2
+                },
+                {
+                    source: 1,
+                    target: 2
+                }
+            ],
+            inputs: [
+                {
+                    node: 0
+                },
+                {
+                    node: 1
+                }
+            ],
+            output: [
+                {
+                    node: 2
+                }
+            ],
+            controls: [
+                {
+                    name: 'crossfade',
+                    type: 'range',
+                    min: 0,
+                    max: 1,
+                    init: 0,
+                    change: function(value) {
+                        var gain1 = Math.cos(value * 0.5*Math.PI);
+                        var gain2 = Math.cos((1.0 - value) * 0.5*Math.PI);
+                        this.getNode(0).gain.value = gain1;
+                        this.getNode(1).gain.value = gain2;
+                    }
+                }
+            ]
+        }
+    };
+
     var initialize = function() {
         context = getContext();
         if (!context) {
