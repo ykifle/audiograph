@@ -21,11 +21,11 @@ function(filepicker, audioLab, stageManager, Pubsub) {
     var defaultImpulseResponseFiles = [
         {
             name: "Narrow Bumpy Space",
-            url: "/media/Narrow Bumpy Space.wav"
+            url: "/impulse_response//Narrow Bumpy Space.ir"
         },
         {
             name: "Parking Garage",
-            url: "/media/Parking Garage.wav"
+            url: "/impulse_response//Parking Garage.ir"
         }
     ];
 
