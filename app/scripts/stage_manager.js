@@ -25,8 +25,7 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             paintStyle: { fillStyle: sourceEndpointColor },
             connectorStyle: { strokeStyle: sourceEndpointColor, lineWidth: 8 },
             connector: ["Bezier", { curviness: 63 } ],
-            anchor: ["BottomCenter", "BottomLeft", "LeftMiddle", "TopLeft",
-                "TopCenter", "TopRight", "RightMiddle", "BottomRight"]
+            anchor: ["BottomCenter"]
         },
         targetEndpointColor = "#0000ff",
         targetEndpoint = {
@@ -35,8 +34,7 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             paintStyle: { fillStyle: targetEndpointColor },
             connectorStyle: { strokeStyle: targetEndpointColor, lineWidth: 8 },
             connector: ["Bezier", { curviness: 63 } ],
-            anchor: ["TopCenter", "TopRight", "RightMiddle", "BottomRight",
-                "BottomCenter", "BottomLeft", "LeftMiddle", "TopLeft"]
+            anchor: ["TopCenter"]
         },
         $stage,
         env;
@@ -48,6 +46,7 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
         NODE_REQUEST: "stage.node.request",
         SOURCE_PLAY: "stage.source.play",
         SOURCE_STOP: "stage.source.stop",
+        SOURCE_PAUSE: "stage.source.pause",
         SOURCE_SET: "stage.source.set",
         DELAY_CHANGE: "stage.delay.change",
         GAIN_CHANGE: "stage.gain.change",
@@ -147,10 +146,10 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
         }).attr("data-url", info.url));
     };
 
-    var createNode = function(info) {
-        var id = info.id,
-            type = info.type,
-            opts = info.opts,
+    var createNode = function(data) {
+        var id = data.info.id,
+            type = data.info.type,
+            opts = data.info.opts,
             template, init, data, $node;
             
         switch (type) {
@@ -207,14 +206,84 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
         }
     };
 
+    var enableSourcePlayButton = function(info) {
+        var $ctrl = $('#' + info.id + ' .play-stop').removeClass('disabled');
+    };
+    
+    var disableSourcePlayButton = function(info) {
+        var $ctrl = $('#' + info.id + ' .play-stop').addClass('disabled');
+    };
+    
+    var enableSourcePauseButton = function(info) {
+        var $ctrl = $('#' + info.id + ' .pause').removeClass('disabled');
+    };
+    
+    var disableSourcePauseButton = function(info) {
+        var $ctrl = $('#' + info.id + ' .pause').addClass('disabled');
+    };
+    
+    var startSourceProgressBar = function(info) {
+        var id = info.id,
+            bufferSet = !!info.state.node.buffer,
+            playOffset = info.state.playOffset,
+            duration = bufferSet ? info.state.node.buffer.duration : 1,
+            percent = (playOffset / duration) * 100,
+            unitPercent = (1 / duration) * 100,
+            $container = $('#' + id + ' .progress-bar-container'),
+            $bar = $('#' + id + ' .progress-bar');
+        
+        $bar.width(percent + '%');
+        if ($container.data('timer')) {
+            clearInterval($container.data('timer'));
+        }
+        $container.data('timer', setInterval(function() {
+            var curPercent = ($bar.width() / $container.width()) * 100,
+                p = Math.min(100, curPercent + unitPercent);
+            $bar.width(p + '%');
+            if (p === 100) {
+                clearInterval($container.data('timer'));
+            }
+        }, 1000));
+    };
+    
+    var stopSourceProgressBar = function(info) {
+        var id = info.id,
+            bufferSet = !!info.state.node.buffer,
+            playOffset = info.state.playOffset,
+            duration = bufferSet ? info.state.node.buffer.duration : 1,
+            percent = (playOffset / duration) * 100,
+            unitPercent = (1 / duration) * 100,
+            $container = $('#' + id + ' .progress-bar-container'),
+            $bar = $('#' + id + ' .progress-bar');
+
+        clearInterval($container.data('timer'));
+        $bar.width(percent + '%');
+    };
+/*
+    var updateSourceNode = function(info) {
+        var id = info.id,
+            bufferSet = !!info.state.node.buffer,
+            usingMic = info.state.mic,
+            connected = info.state.destConnected,
+            playOffset = info.state.playOffset,
+            duration = bufferSet ? info.state.node.buffer.duration : 1,
+            playbackState = info.state.node.playbackState,
+            $node = $('#' + id),
+            $select = $('#' + id + ' .audio-list'),
+            $playStop = $('#' + id + ' .play-stop'),
+            $pause = $('#' + id + ' .pause');
+
+        
+    };
+*/
     var setSourceControlType = function(info) {
         var id = info.id,
             type = info.type,
-            $ctrl = $('#' + id + ' .ctrl').removeClass('disabled');
+            $ctrl = $('#' + id + ' .play-stop');
         if (type === 'play') {
-            $ctrl.removeClass("stop").addClass("play").text('Play');
+            $ctrl.data('type', "play").text('Play');
         } else if (type === 'stop') {
-            $ctrl.removeClass("play").addClass("stop").text('Stop');
+            $ctrl.data('type', "stop").text('Stop');
         }
     };
     
@@ -262,21 +331,29 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
     function initSourceNode($node) {
         var id = $node.attr('id'),
             $select = $node.find('.audio-list'),
-            $ctrl = $node.find('.ctrl');
+            $ctrl = $node.find('.play-stop'),
+            $pause = $node.find('.pause');
             
-        $ctrl.addClass("disabled");
+        $ctrl.addClass("disabled").data('type', 'play');
+        $pause.addClass("disabled");
         jsPlumb.addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
 
-        // Publish play and stop events
+        // Publish play and stop and pause events
         $ctrl.on('click', function() {
             var $this = $(this),
                 data = { id: id };
             if ($this.hasClass('disabled')) return;
-            if ($this.hasClass('play')) {
+            if ($this.data('type') === 'play') {
                 Pubsub.publish(EVENTS.SOURCE_PLAY, data);
-            } else if ($this.hasClass('stop')) {
+            } else if ($this.data('type') == 'stop') {
                 Pubsub.publish(EVENTS.SOURCE_STOP, data);
             }
+        });
+        $pause.on('click', function() {
+            var $this = $(this),
+                data = { id: id };
+            if ($this.hasClass('disabled')) return;
+            Pubsub.publish(EVENTS.SOURCE_PAUSE, data);
         });
 
         $select.on('change', function() {
@@ -289,6 +366,12 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
                 Pubsub.publish(EVENTS.SOURCE_SET, {
                     id: id,
                     url: $selected.data('url')
+                });
+            } else if ($selected.hasClass("use-mic")) {
+                $(this).prop('disabled', true);
+                Pubsub.publish(EVENTS.SOURCE_SET, {
+                    id: id,
+                    mic: true
                 });
             }
         });
@@ -451,6 +534,12 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
         addSourceFile: addSourceFile,
         addIRFile: addIRFile,
         createNode: createNode,
+        enableSourcePlayButton: enableSourcePlayButton,
+        disableSourcePlayButton: disableSourcePlayButton,
+        enableSourcePauseButton: enableSourcePauseButton,
+        disableSourcePauseButton: disableSourcePauseButton,
+        stopSourceProgressBar: stopSourceProgressBar,
+        startSourceProgressBar: startSourceProgressBar,
         setSourceControlType: setSourceControlType,
         setSourceInput: setSourceInput,
         setConvolverIR: setConvolverIR

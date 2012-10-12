@@ -1,9 +1,18 @@
 <div class="node source">
     <div class="node-name">Source</div>
-    <select class="audio-list">
-        <option class="no-file">Select a file</option>
-        <option class="upload-file">Upload New File</option>
-        {{#audioFiles}}<option class="audio-file" data-url="{{url}}">{{name}}</option>{{/audioFiles}}
-    </select>
-    <div class="ctrl play">Play</div>
+    <div class="ctrl-row">
+        <select class="audio-list">
+            <option class="no-file">Select a file</option>
+            <option class="upload-file">Upload New File</option>
+            <option class="use-mic">Use Mic</option>
+            {{#audioFiles}}<option class="audio-file" data-url="{{url}}">{{name}}</option>{{/audioFiles}}
+        </select>
+    </div>
+    <div class="ctrl-row">
+        <div class="play-stop">Play</div>
+        <div class="pause">Pause</div>
+    </div>
+    <div class="info-row">
+        <div class="progress-bar-container"><div class="progress-bar"></div></div>
+    </div>
 </div>

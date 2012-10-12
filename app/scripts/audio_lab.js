@@ -14,15 +14,18 @@ function(Pubsub) {
         biquadFilterNodes = { count: 0 },
         connections = [],
         audioBuffers = {},
-        context;
+        context,
+        micSource;
 
     // Define audio events
     var EVENTS = {
         NODE_CREATE: "audio.node.create",
         SOURCE_PLAY: "audio.source.play",
         SOURCE_STOP: "audio.source.stop",
+        SOURCE_PAUSE: "audio.source.pause",
         SOURCE_BUFFER_SET: "audio.source.buffer_set",
-        CONVOLVER_BUFFER_SET: "audio.convolver.buffer_set"
+        CONVOLVER_BUFFER_SET: "audio.convolver.buffer_set",
+        NODE_CHANGE: "audio.node.change"
     };
     // Define node types
     var NODES = {
@@ -136,13 +139,16 @@ function(Pubsub) {
                 break;
         }
         if (node) {
-            Pubsub.publish(EVENTS.NODE_CREATE, info);
+            Pubsub.publish(EVENTS.NODE_CREATE, { info: info, state: node });
         }
     };
 
     var setSourceAudio = function(id, bufferData, passData, autoPlay) {
         var source = nodes[id];
         if (source) {
+            if (source.isMic) {
+                source = createSource(id);
+            }
             if (bufferData.id && bufferData.id in audioBuffers) {
                 setSourceBuffer(id, audioBuffers[bufferData.id], passData);
                 if (autoPlay) {
@@ -164,38 +170,104 @@ function(Pubsub) {
             }
         }
     };
-
-    var playSource = function(id) {
+    
+    var setSourceMic = function(id) {
         var source = nodes[id];
         if (source) {
+            if (!navigator.webkitGetUserMedia) {
+                console.log("Browser does not support webkitGetUserMedia");
+                Pubsub.publish(EVENTS.SOURCE_MIC_FAIL, { id: id, state: source });
+            }
+            if (!micSource) {
+                try {
+                    navigator.webkitGetUserMedia({audio:true}, function(stream) {
+                        micSource = wrapNode(context.createMediaStreamSource(stream));
+                        micSource.isMic = true;
+                        
+                        var connections = disconnect({ source: id }, true);
+                        nodes[id] = micSource;
+                        connect(connections, true);
+                        Pubsub.publish(EVENTS.SOURCE_MIC_SET, { id: id, state: micSource });
+                    });
+                } catch (e) {
+                    console.log("Error occured while requesting mic");
+                    Pubsub.publish(EVENTS.SOURCE_MIC_FAIL, { id: id, state: source });
+                }
+            } else {
+                var connections = disconnect({ source: id }, true);
+                nodes[id] = micSource;
+                connect(connections, true);
+                Pubsub.publish(EVENTS.SOURCE_MIC_SET, { id: id, state: micSource });
+            }
+        };
+    };
+
+    var playSource = function(id) {
+        var node = nodes[id];
+        if (node) {
+            var source = node.node;
             // FINISHED_STATE is the final state of source so check if we need a new source node
             if (source.playbackState === source.FINISHED_STATE) {
-                var connections = disconnect({ source: id });
-                source = createSource(id, source.buffer);
-                connect(connections);
+                var connections = disconnect({ source: id }, true);
+                node = createSource(id, source.buffer, {
+                    playOffset: node.playOffset,
+                    destConnected: node.destConnected
+                });
+                source = node.node;
+                connect(connections, true);
             }
-            if (source.noteOn) {
-                source.noteOn(0);
+            var duration = source.buffer.duration - node.playOffset;
+            if (source.noteGrainOn) {
+                source.noteGrainOn(context.currentTime, node.playOffset, duration);
+            } else if (source.noteOn) {
+                source.noteOn(context.currentTime, node.playOffset, duration);
             } else {
-                source.start(0);
+                source.start(context.currentTime, node.playOffset, duration);
             }
-            Pubsub.publish(EVENTS.SOURCE_PLAY, { id: id, state: source.playbackState });
+            node.playStartTime = context.currentTime;
+            node.timer = setTimeout(function() {
+                node.playOffset = 0;
+                Pubsub.publish(EVENTS.SOURCE_STOP, { id: id, state: node });
+            }, duration * 1000);
+            Pubsub.publish(EVENTS.SOURCE_PLAY, { id: id, state: node });
         }
     };
 
     var stopSource = function(id) {
-        var source = nodes[id];
-        if (source) {
+        var node = nodes[id];
+        if (node) {
+            var source = node.node;
             if (source.noteOff) {
-                source.noteOff(0);
+                source.noteOff(context.currentTime);
             } else {
-                source.stop(0);
+                source.stop(context.currentTime);
             }
-            Pubsub.publish(EVENTS.SOURCE_STOP, { id: id, state: source.playbackState });
+            node.playOffset = 0;
+            if (node.timer) {
+                clearTimeout(node.timer);
+            }
+            Pubsub.publish(EVENTS.SOURCE_STOP, { id: id, state: node });
+        }
+    };
+    
+    var pauseSource = function(id) {
+        var node = nodes[id];
+        if (node) {
+            var source = node.node;
+            if (source.noteOff) {
+                source.noteOff(context.currentTime);
+            } else {
+                source.stop(context.currentTime);
+            }
+            node.playOffset += context.currentTime - node.playStartTime;
+            if (node.timer) {
+                clearTimeout(node.timer);
+            }
+            Pubsub.publish(EVENTS.SOURCE_PAUSE, { id: id, state: node });
         }
     };
 
-    var connect = function(config) {
+    var connect = function(config, silent) {
         if (config instanceof Array) {
             for (var i = 0; i < config.length; i++) {
                 makeConnection(config[i]);
@@ -203,9 +275,13 @@ function(Pubsub) {
         } else {
             makeConnection(config);
         }
+        
+        if (!silent) {
+            updateConnectionStates(config.source);
+        }
     };
 
-    var disconnect = function(config) {
+    var disconnect = function(config, silent) {
         var removedConnections = [];
         if (!config.source && !config.target) {
             return removedConnections;
@@ -219,32 +295,36 @@ function(Pubsub) {
             } else {
                 var sourceNode = nodes[con.source],
                     targetNode = nodes[con.target];
-                sourceNode.disconnect(targetNode);
+                sourceNode.node.disconnect(targetNode.node);
                 removedConnections.push(con);
             }
         }
         connections = resConnections;
+        
+        if (!silent) {
+            updateConnectionStates(config.source);
+        }
         return removedConnections;
     };
 
     var setDelayValue = function(id, delay) {
         var delayNode = nodes[id];
         if (delayNode) {
-            delayNode.delayTime.value = delay;
+            delayNode.node.delayTime.value = delay;
         }
     };
 
     var setGainValue = function(id, value) {
         var node = nodes[id];
         if (node) {
-            node.gain.value = value;
+            node.node.gain.value = value;
         }
     };
 
     var setPannerPosition = function(id, pos) {
         var node = nodes[id];
         if (node) {
-            node.setPosition(pos.x, pos.y, pos.z);
+            node.node.setPosition(pos.x, pos.y, pos.z);
         }
     };
 
@@ -270,21 +350,21 @@ function(Pubsub) {
     var setCompressorThreshold = function(id, value) {
         var node = nodes[id];
         if (node) {
-            node.threshold.value = value;
+            node.node.threshold.value = value;
         }
     };
 
     var setCompressorRatio = function(id, value) {
         var node = nodes[id];
         if (node) {
-            node.ratio.value = value;
+            node.node.ratio.value = value;
         }
     };
     
     var setBiquadFilterType = function(id, value) {
         var node = nodes[id];
         if (node) {
-            node.type = value;
+            node.node.type = value;
         }
     };
     
@@ -300,14 +380,14 @@ function(Pubsub) {
             // Compute a multiplier from 0 to 1 based on an exponential scale.
             var multiplier = Math.pow(2, numberOfOctaves * (value - 1.0));
             // Get back to the frequency value between min and max.
-            node.frequency.value = maxValue * multiplier;
+            node.node.frequency.value = maxValue * multiplier;
         }
     };
     
     var setBiquadFilterQuality = function(id, value) {
         var node = nodes[id];
         if (node) {
-            node.Q.value = value * 30;
+            node.node.Q.value = value * 30;
         }
     };
 
@@ -322,10 +402,26 @@ function(Pubsub) {
     function setSourceBuffer(id, buffer, passData) {
         var source = nodes[id];
         if (source) {
-            source.buffer = buffer;
+            source.node.buffer = buffer;
+            source.playOffset = 0;
+            if (source.node.playbackState != source.node.UNSCHEDULED_STATE) {
+                source.playStartTime = context.currentTime;
+                if (source.timer) {
+                    clearTimeout(source.timer);
+                }
+                var duration = buffer.duration - source.playOffset;
+                source.timer = setTimeout(function() {
+                    source.playOffset = 0;
+                    Pubsub.publish(EVENTS.SOURCE_STOP, { id: id, state: source });
+                }, duration * 1000);
+                Pubsub.publish(EVENTS.SOURCE_PLAY, { id: id, data: passData, state: source });
+            } else {
+                Pubsub.publish(EVENTS.SOURCE_STOP, { id: id, data: passData, state: source });
+            }
             Pubsub.publish(EVENTS.SOURCE_BUFFER_SET, {
                 id: id,
-                data: passData
+                data: passData,
+                state: source
             });
         }
     }
@@ -333,7 +429,7 @@ function(Pubsub) {
     function setConvolverBuffer(id, buffer, passData) {
         var node = nodes[id];
         if (node) {
-            node.buffer = buffer;
+            node.node.buffer = buffer;
             Pubsub.publish(EVENTS.CONVOLVER_BUFFER_SET, {
                 id: id,
                 data: passData
@@ -362,9 +458,65 @@ function(Pubsub) {
             targetNode = nodes[config.target];
 
         if (sourceNode && targetNode) {
-            sourceNode.connect(targetNode);
+            sourceNode.node.connect(targetNode.node);
             connections.push(config);
         }
+    }
+    
+    function updateConnectionStates(sourceId, updated) {
+        var source = nodes[sourceId];
+        if (!source) return;
+        updated || (updated = []);
+
+        //TODO: need to make this more efficient
+        // Check if we have already been to this node
+        for (var i = 0; i < updated.length; i++) {
+            if (sourceId === updated[i]) return;
+        }
+
+        for (var i = 0; i < connections.length; i++) {
+            var con = connections[i];
+            if (con.source == sourceId && nodes[con.target] && nodes[con.target].destConnected) {
+                if (!source.destConnected) {
+                    // The node just became connected to destination
+                    source.destConnected = true;
+                    updated.push(sourceId);
+                    Pubsub.publish(EVENTS.NODE_CHANGE, { id: sourceId, state: source });
+                    for (var j = 0; j < connections.length; j++) {
+                        if (connections[j].target == sourceId) {
+                            updateConnectionStates(connections[j].source, updated);
+                        }
+                    }
+                }
+                return;
+            }
+        }
+        if (source.destConnected) {
+            // The node just got disconnected from destination
+            source.destConnected = false;
+            updated.push(sourceId);
+            Pubsub.publish(EVENTS.NODE_CHANGE, { id: sourceId, state: source });
+            for (var j = 0; j < connections.length; j++) {
+                if (connections[j].target == sourceId) {
+                    updateConnectionStates(connections[j].source, updated);
+                }
+            }
+        }
+    }
+    
+    function wrapNode(node, destConnected, opts) {
+        var wrap = {
+            node: node,
+            destConnected: destConnected
+        };
+        
+        if (opts) {
+            for (var key in opts) {
+                wrap[key] = opts[key];
+            }
+        }
+        
+        return wrap;
     }
 
     function createDestination(id) {
@@ -373,51 +525,60 @@ function(Pubsub) {
             locContext = getContext();
         }
         if (locContext) {
+            var wrap = wrapNode(locContext.destination, true);
             destinations[id] = locContext.destination;
             destinations.count++;
-            nodes[id] = locContext.destination;
+            nodes[id] = wrap;
             nodes.count++;
             
-            return locContext.destination;
+            return wrap;
         }
     }
 
-    function createSource(id, buffer) {
+    function createSource(id, buffer, opts) {
         var source = context.createBufferSource();
-
+        opts || (opts = { playOffset: 0 });
+        
         if (buffer) {
             source.buffer = buffer;
+            opts.duration = buffer.duration;
         }
         if (!(id in sources)) {
             sources.count++;
         }
         sources[id] = source;
+        
+        var wrap = wrapNode(source, false, opts);
         if (!(id in nodes)) {
             nodes.count++;
         }
-        nodes[id] = source;
+        nodes[id] = wrap;
 
-        return source;
+        return wrap;
     }
 
     function createDelayNode(id) {
-        var delayNode = context.createDelayNode(100);
-        delayNodes[id] = delayNode;
+        var node = context.createDelayNode(100),
+            wrap = wrapNode(node, false);
+            
+        delayNodes[id] = node;
         delayNodes.count++;
-        nodes[id] = delayNode;
+        nodes[id] = wrap;
         nodes.count++;
         
-        return delayNode;
+        return wrap;
     }
 
     function createGainNode(id) {
-        var node = context.createGainNode();
+        var node = context.createGainNode(),
+            wrap = wrapNode(node, false);
+            
         gainNodes[id] = node;
         gainNodes.count++;
-        nodes[id] = node;
+        nodes[id] = wrap;
         nodes.count++;
 
-        return node;
+        return wrap;
     }
 
     function createPannerNode(id) {
@@ -425,40 +586,47 @@ function(Pubsub) {
         node.panningModel = node.EQUALPOWER;
         pannerNodes[id] = node;
         pannerNodes.count++;
-        nodes[id] = node;
+        var wrap = wrapNode(node, false);
+        nodes[id] = wrap;
         nodes.count++;
 
-        return node;
+        return wrap;
     }
 
     function createConvolverNode(id) {
-        var node = context.createConvolver();
+        var node = context.createConvolver(),
+            wrap = wrapNode(node, false);
+            
         convolverNodes[id] = node;
         convolverNodes.count++;
-        nodes[id] = node;
+        nodes[id] = wrap;
         nodes.count++;
 
-        return node;
+        return wrap;
     };
     
     function createCompressorNode(id) {
-        var node = context.createDynamicsCompressor();
+        var node = context.createDynamicsCompressor(),
+            wrap = wrapNode(node, false);
+            
         compressorNodes[id] = node;
         compressorNodes.count++;
-        nodes[id] = node;
+        nodes[id] = wrap;
         nodes.count++;
 
-        return node;
+        return wrap;
     }
 
     function createBiquadFilterNode(id) {
-        var node = context.createBiquadFilter();
+        var node = context.createBiquadFilter(),
+            wrap = wrapNode(node, false);
+            
         biquadFilterNodes[id] = node;
         biquadFilterNodes.count++;
-        nodes[id] = node;
+        nodes[id] = wrap;
         nodes.count++;
 
-        return node;
+        return wrap;
     }
 
     return {
@@ -466,8 +634,10 @@ function(Pubsub) {
         initialize: initialize,
         createNode: createNode,
         setSourceAudio: setSourceAudio,
+        setSourceMic: setSourceMic,
         playSource: playSource,
         stopSource: stopSource,
+        pauseSource: pauseSource,
         connect: connect,
         disconnect: disconnect,
         setDelayValue: setDelayValue,

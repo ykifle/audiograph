@@ -18,7 +18,7 @@ require.config({
         jsplumb: "../scripts/vendor/jquery.jsPlumb-1.3.15-all-min",
         mustache: "../scripts/vendor/mustache",
         modernizr: "../scripts/vendor/modernizr.min",
-        filepicker: "https://api.filepicker.io/v0/filepicker",
+        filepicker: "../scripts/vendor/filepicker",
         pubsub: "../scripts/vendor/pubsub"
     },
     

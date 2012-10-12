@@ -58,10 +58,17 @@ function(filepicker, audioLab, stageManager, Pubsub) {
         Pubsub.subscribe(stageManager.EVENTS.SOURCE_STOP, function(evt, info) {
             audioLab.stopSource(info.id);
         });
+        Pubsub.subscribe(stageManager.EVENTS.SOURCE_PAUSE, function(evt, info) {
+            audioLab.pauseSource(info.id);
+        });
         Pubsub.subscribe(stageManager.EVENTS.SOURCE_SET, function(evt, info) {
             var id = info.id,
-                url = info.url;
-            if (url) {
+                url = info.url,
+                mic = info.mic;
+                
+            if (mic) {
+                audioLab.setSourceMic(id);
+            } else if (url) {
                 console.log("getting audio file data");
                 getAudioData(url, function(data) {
                     console.log("setting source buffer");
@@ -120,6 +127,36 @@ function(filepicker, audioLab, stageManager, Pubsub) {
         Pubsub.subscribe(stageManager.EVENTS.BIQUAD_FILTER_QUALITY_CHANGE, function(evt, info) {
             audioLab.setBiquadFilterQuality(info.id, info.value);
         });
+        Pubsub.subscribe(audioLab.EVENTS.NODE_CREATE, function(evt, data) {
+            stageManager.createNode(data);
+        });
+        Pubsub.subscribe(audioLab.EVENTS.SOURCE_PLAY, function(evt, info) {
+            info.type = 'stop';
+            stageManager.enableSourcePauseButton(info);
+            stageManager.startSourceProgressBar(info);
+            stageManager.setSourceControlType(info);
+        });
+        Pubsub.subscribe(audioLab.EVENTS.SOURCE_STOP, function(evt, info) {
+            info.type = 'play';
+            stageManager.disableSourcePauseButton(info);
+            stageManager.stopSourceProgressBar(info);
+            stageManager.setSourceControlType(info);
+        });
+        Pubsub.subscribe(audioLab.EVENTS.SOURCE_PAUSE, function(evt, info) {
+            info.type = 'play';
+            stageManager.disableSourcePauseButton(info);
+            stageManager.stopSourceProgressBar(info);
+            stageManager.setSourceControlType(info);
+        });
+        Pubsub.subscribe(audioLab.EVENTS.SOURCE_BUFFER_SET, function(evt, info) {
+            info.url = info.data.url;
+            stageManager.enableSourcePlayButton(info);
+            stageManager.setSourceInput(info);
+        });
+        Pubsub.subscribe(audioLab.EVENTS.CONVOLVER_BUFFER_SET, function(evt, info) {
+            info.url = info.data.url;
+            stageManager.setConvolverIR(info);
+        });
         Pubsub.subscribe(EVENTS.ENV_CHANGE, function(evt, info) {
             stageManager.setEnv(info.env);
         });
@@ -128,27 +165,6 @@ function(filepicker, audioLab, stageManager, Pubsub) {
         });
         Pubsub.subscribe(EVENTS.IR_UPLOAD, function(evt, info) {
             stageManager.addIRFile(info);
-        });
-        Pubsub.subscribe(audioLab.EVENTS.NODE_CREATE, function(evt, info) {
-            stageManager.createNode(info);
-        });
-        Pubsub.subscribe(audioLab.EVENTS.SOURCE_PLAY, function(evt, info) {
-            info.type = 'stop';
-            stageManager.setSourceControlType(info);
-        });
-        Pubsub.subscribe(audioLab.EVENTS.SOURCE_STOP, function(evt, info) {
-            info.type = 'play';
-            stageManager.setSourceControlType(info);
-        });
-        Pubsub.subscribe(audioLab.EVENTS.SOURCE_BUFFER_SET, function(evt, info) {
-            info.url = info.data.url;
-            info.type = 'play';
-            stageManager.setSourceControlType(info);
-            stageManager.setSourceInput(info);
-        });
-        Pubsub.subscribe(audioLab.EVENTS.CONVOLVER_BUFFER_SET, function(evt, info) {
-            info.url = info.data.url;
-            stageManager.setConvolverIR(info);
         });
     }
 
