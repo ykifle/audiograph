@@ -20,12 +20,44 @@ function(filepicker, audioLab, stageManager, Pubsub) {
     // Predefined IR files for the convolver node
     var defaultImpulseResponseFiles = [
         {
+            name: "Five Columns Long",
+            url: "audiograph/impulse_response/Five Columns Long.wav"
+        },
+        {
+            name: "Five Columns",
+            url: "audiograph/impulse_response/Five Columns.wav"
+        },
+        {
+            name: "French 18th Century Salon",
+            url: "audiograph/impulse_response/French 18th Century Salon.wav"
+        },
+        {
+            name: "Going Home",
+            url: "audiograph/impulse_response/Going Home.wav"
+        },
+        {
+            name: "In The Silo Revised",
+            url: "audiograph/impulse_response/In The Silo Revised.wav"
+        },
+        {
             name: "Narrow Bumpy Space",
-            url: "/impulse_response//Narrow Bumpy Space.ir"
+            url: "audiograph/impulse_response/Narrow Bumpy Space.ir"
+        },
+        {
+            name: "Nice Drum Room",
+            url: "audiograph/impulse_response/Nice Drum Room.wav"
         },
         {
             name: "Parking Garage",
-            url: "/impulse_response//Parking Garage.ir"
+            url: "audiograph/impulse_response/Parking Garage.ir"
+        },
+        {
+            name: "Rays",
+            url: "audiograph/impulse_response/Rays.wav"
+        },
+        {
+            name: "Trig Room",
+            url: "audiograph/impulse_response/Trig Room.wav"
         }
     ];
 
