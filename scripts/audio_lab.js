@@ -20,12 +20,14 @@ function(Pubsub) {
     // Define audio events
     var EVENTS = {
         NODE_CREATE: "audio.node.create",
+        NODE_DELETE: "audio.node.delete",
         SOURCE_PLAY: "audio.source.play",
         SOURCE_STOP: "audio.source.stop",
         SOURCE_PAUSE: "audio.source.pause",
         SOURCE_BUFFER_SET: "audio.source.buffer_set",
         CONVOLVER_BUFFER_SET: "audio.convolver.buffer_set",
-        NODE_CHANGE: "audio.node.change"
+        NODE_CHANGE: "audio.node.change",
+        SOURCE_MIC_SET: "audio.source.mic_set"
     };
     // Define node types
     var NODES = {
@@ -141,6 +143,23 @@ function(Pubsub) {
         if (node) {
             Pubsub.publish(EVENTS.NODE_CREATE, { info: info, state: node });
         }
+    };
+    
+    var deleteNode = function(id) {
+        var node = nodes[id];
+        if (node) {
+            disconnect({ source: id });
+            delete nodes[id];
+            if (destinations[id]) delete destinations[id];
+            if (sources[id]) delete sources[id];
+            if (delayNodes[id]) delete delayNodes[id];
+            if (gainNodes[id]) delete gainNodes[id];
+            if (pannerNodes[id]) delete pannerNodes[id];
+            if (convolverNodes[id]) delete convolverNodes[id];
+            if (compressorNodes[id]) delete compressorNodes[id];
+            if (biquadFilterNodes[id]) delete biquadFilterNodes[id];
+        }
+        Pubsub.publish(EVENTS.NODE_DELETE, { id: id });
     };
 
     var setSourceAudio = function(id, bufferData, passData, autoPlay) {
@@ -286,21 +305,22 @@ function(Pubsub) {
         if (!config.source && !config.target) {
             return removedConnections;
         }
-        var resConnections = [];
+        var resultConnections = [];
         for (var i = 0; i < connections.length; i++) {
             var con = connections[i];
             if ((config.source && con.source != config.source) 
                 || (config.target && con.target != config.target)) {
-                resConnections.push(con);
+                resultConnections.push(con);
             } else {
                 var sourceNode = nodes[con.source],
                     targetNode = nodes[con.target];
-                sourceNode.node.disconnect(targetNode.node);
+                sourceNode.node.disconnect();
                 removedConnections.push(con);
             }
         }
-        connections = resConnections;
-        
+        connections = [];
+        connect(resultConnections, true);
+
         if (!silent) {
             updateConnectionStates(config.source);
         }
@@ -633,6 +653,7 @@ function(Pubsub) {
         EVENTS: EVENTS,
         initialize: initialize,
         createNode: createNode,
+        deleteNode: deleteNode,
         setSourceAudio: setSourceAudio,
         setSourceMic: setSourceMic,
         playSource: playSource,

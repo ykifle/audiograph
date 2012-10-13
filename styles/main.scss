@@ -8,15 +8,27 @@ $colWidth: 14;
   -webkit-border-radius: $radius;
 }
 
-@mixin node($height: $lineHeight * 3px, $color: #fff) {
-    height: $height;
+@mixin node($color: #fff) {
     background-color: $color;
     margin: 0 auto;
     padding: 10px 10px;
     text-align: center;
+    font-weight: bold;
     @include rounded();
-    border: 1px solid #ccc;
+    border: 1px solid #5C5C2E;
+    box-shadow: 1px 1px 3px rgba(61, 61, 35, 0.57);
     cursor: pointer;
+    // needs latest Compass, add '@import "compass"' to your scss
+    background-color: rgb(213,206,166); // Old browsers
+    @include filter-gradient(#d5cea6, #b7ad70, horizontal); // IE6-9 fallback on horizontal gradient
+    @include background-image(linear-gradient(left top,  rgba(213,206,166,1) 0%,rgba(201,193,144,1) 40%,rgba(183,173,112,1) 100%));
+    .delete-node {
+        position: absolute;
+        top: 5px;
+        right: 4px;
+        width: 20px;
+        height: 20px;
+    }
 }
 
 @mixin node-button($height: $lineHeight * 1.5px, $color: yellow) {
@@ -41,13 +53,17 @@ html, body {
 }
 
 .node-menu {
-    width: $colWidth * 10px;
     position: fixed;
     top: $lineHeight * 1px;
     left: $colWidth * 1px;
+    // needs latest Compass, add '@import "compass"' to your scss
+    background-color: rgb(255,255,255); // Old browsers
+    @include filter-gradient(#ffffff, #e5e5e5, horizontal); // IE6-9 fallback on horizontal gradient
+    @include background-image(linear-gradient(left top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%));
+    box-shadow: 3px 3px 13px rgba(51, 51, 51, 0.29);
+    border: 1px solid #C5BF92;
     .node {
         @include node();
-        line-height: $lineHeight * 3px;
         margin-bottom: 10px;
         &:last-child {
             margin-bottom: 0;
@@ -57,6 +73,16 @@ html, body {
 
 .stage {
     height: 100%;
+    background-color: rgba(198, 200, 201, 0.5);
+    background: -webkit-linear-gradient(lightBlue 1px, transparent 2px), -webkit-linear-gradient(0, lightBlue 1px, transparent 1px);
+    background: -moz-linear-gradient(lightBlue 1px, transparent 2px), -moz-linear-gradient(0, lightBlue 1px, transparent 1px);
+    background: -o-linear-gradient(lightBlue 1px, transparent 2px), -o-linear-gradient(0, lightBlue 1px, transparent 1px);
+    background: -ms-linear-gradient(lightBlue 1px, transparent 2px), -ms-linear-gradient(0, lightBlue 1px, transparent 1px);
+    background: linear-gradient(lightBlue 1px, transparent 2px), linear-gradient(0, lightBlue 1px, transparent 1px);
+    -webkit-background-size: 150px 150px, 150px 150px;
+    -moz-background-size: 150px 150px, 150px 150px;
+    background-size: 150px 150px, 150px 150px;
+    background-position: -2px -2px, -2px -2px;
     .destination {
         @include node();
     }

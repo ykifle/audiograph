@@ -84,6 +84,9 @@ function(filepicker, audioLab, stageManager, Pubsub) {
         Pubsub.subscribe(stageManager.EVENTS.NODE_REQUEST, function(evt, info) {
             audioLab.createNode(info);
         });
+        Pubsub.subscribe(stageManager.EVENTS.NODE_DELETE, function(evt, info) {
+            audioLab.deleteNode(info.id);
+        });
         Pubsub.subscribe(stageManager.EVENTS.SOURCE_PLAY, function(evt, info) {
             audioLab.playSource(info.id);
         });
@@ -162,6 +165,9 @@ function(filepicker, audioLab, stageManager, Pubsub) {
         Pubsub.subscribe(audioLab.EVENTS.NODE_CREATE, function(evt, data) {
             stageManager.createNode(data);
         });
+        Pubsub.subscribe(audioLab.EVENTS.NODE_DELETE, function(evt, data) {
+            stageManager.deleteNode(data);
+        });
         Pubsub.subscribe(audioLab.EVENTS.SOURCE_PLAY, function(evt, info) {
             info.type = 'stop';
             stageManager.enableSourcePauseButton(info);
@@ -184,6 +190,11 @@ function(filepicker, audioLab, stageManager, Pubsub) {
             info.url = info.data.url;
             stageManager.enableSourcePlayButton(info);
             stageManager.setSourceInput(info);
+        });
+        Pubsub.subscribe(audioLab.EVENTS.SOURCE_MIC_SET, function(evt, info) {
+            stageManager.disableSourcePlayButton(info);
+            stageManager.disableSourcePauseButton(info);
+            stageManager.enableSourceSelect(info);
         });
         Pubsub.subscribe(audioLab.EVENTS.CONVOLVER_BUFFER_SET, function(evt, info) {
             info.url = info.data.url;
