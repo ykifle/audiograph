@@ -44,6 +44,7 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
         CONNECTION: "stage.connection.connect",
         DISCONNECTION: "stage.connection.disconnect",
         NODE_REQUEST: "stage.node.request",
+        NODE_DELETE: "stage.node.delete",
         SOURCE_PLAY: "stage.source.play",
         SOURCE_STOP: "stage.source.stop",
         SOURCE_PAUSE: "stage.source.pause",
@@ -105,23 +106,72 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
                 opacity: 0.55
             });
 
+            var resizeStage = function(event, ui) {
+                var position = ui ? ui.position : $stage.position(),
+                    stageWidth = $stage.width(),
+                    stageHeight = $stage.height(),
+                    windowWidth = $(window).width(),
+                    windowHeight = $(window).height(),
+                    padding = 100,
+                    widthOffset = 0,
+                    heightOffset = 0,
+                    leftOffset = 0,
+                    topOffset = 0;
+                    
+                if (position.left + padding > 0) {
+                    leftOffset = -windowWidth - position.left;
+                }
+                if (position.top + padding > 0) {
+                    topOffset = -windowHeight - position.top;
+                }
+                var rightEdge = position.left + leftOffset + stageWidth;
+                if (rightEdge - padding < windowWidth) {
+                    widthOffset = windowWidth + windowWidth - rightEdge;
+                }
+                var bottomEdge = position.top + topOffset + stageHeight;
+                if (bottomEdge - padding < windowHeight) {
+                    heightOffset = windowHeight + windowHeight - bottomEdge;
+                }
+                $stage.css('left', position.left + leftOffset + 'px');
+                $stage.css('top', position.top + topOffset + 'px');
+                $stage.width(stageWidth + widthOffset + 'px');
+                $stage.height(stageHeight + heightOffset + 'px');
+                
+                $stage.children().not('.node-menu').each(function() {
+                    $(this).css('left', parseInt($(this).css('left'), 10) - leftOffset + 'px');
+                    $(this).css('top', parseInt($(this).css('top'), 10) - topOffset + 'px');
+                });
+                
+            };
+            
             // Initialize the stage
-            $stage.droppable({
+            $stage.width($(window).width() * 3)
+                .height($(window).height() * 3)
+                .css("left", -$(window).width() + 'px')
+                .css("top", -$(window).height() + 'px')
+                .droppable({
                 accept: menuNodesSelector,
                 drop: function(event, ui) {
                     var type = ui.draggable.data('type'),
                         position = {
-                            top: ui.offset.top,
-                            left: ui.offset.left
+                            top: ui.offset.top - parseInt($stage.css("top"), 10),
+                            left: ui.offset.left - parseInt($stage.css("left"), 10)
                         };
                     requestNode(type, position);
                 }
+            }).draggable({
+                stop: resizeStage
             });
+            
+            $(window).resize(function() {
+                resizeStage();
+            });
+            //$stage.children().not('.node-menu').draggable({handle: $stage});
 
             // Create destination node
             requestNode(NODES.DESTINATION, {
-                left: $stage.width() - 200,
-                top: $stage.height() / 2
+                left: $(window).width() * 1.5,
+                top: $(window).height() * 1.5
             });
         });
     };
@@ -200,10 +250,22 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             nodes.push($node);
             $stage.append($node);
             jsPlumb.draggable(id);
+            $node.find(".delete-node").click(function() {
+                Pubsub.publish(EVENTS.NODE_DELETE, { id: id });
+            });
             if (typeof init === 'function') {
                 init($node);
             }
         }
+    };
+    
+    var deleteNode = function(info) {
+        if ($('#' + info.id).data('endpoints')) {
+            $.each($('#' + info.id).data('endpoints'), function(index, endpoint) {
+                jsPlumb.deleteEndpoint(endpoint);
+            });
+        }
+        $('#' + info.id).remove();
     };
 
     var enableSourcePlayButton = function(info) {
@@ -220,6 +282,14 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
     
     var disableSourcePauseButton = function(info) {
         var $ctrl = $('#' + info.id + ' .pause').addClass('disabled');
+    };
+    
+    var enableSourceSelect = function(info) {
+        var $ctrl = $('#' + info.id + ' .audio-list').prop('disabled', false);
+    };
+    
+    var disableSourceSelect = function(info) {
+        var $ctrl = $('#' + info.id + ' .audio-list').prop('disabled', true);
     };
     
     var startSourceProgressBar = function(info) {
@@ -303,6 +373,15 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
         }).prop('selected', true);
     };
 
+    function addEndpoint(id, opts, defaults) {
+        var ep = jsPlumb.addEndpoint(id, opts, defaults);
+        if (!$('#' + id).data('endpoints')) {
+            $('#' + id).data('endpoints', [ep]);
+        } else {
+            $('#' + id).data('endpoints').push(ep);
+        }
+    }
+
     function requestNode(type, opts) {
         var id = "node-" + nodeId++;
 
@@ -321,7 +400,7 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
     function initDestinationNode($node) {
         var id = $node.attr('id');
         // Add a target endpoint, only on connection allowed
-        jsPlumb.addEndpoint(id, {
+        addEndpoint(id, {
             // Number of channels supported by hardware
             //maxConnections: env.destinationMaxChannels
             maxConnections: -1
@@ -336,7 +415,7 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             
         $ctrl.addClass("disabled").data('type', 'play');
         $pause.addClass("disabled");
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
 
         // Publish play and stop and pause events
         $ctrl.on('click', function() {
@@ -382,8 +461,8 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             $input = $('#' + id + ' .delay-input'),
             $value = $('#' + id + ' .delay-value');
 
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
 
         $input.on('change', function() {
             var delay = parseInt($(this).val(), 10);
@@ -401,8 +480,8 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             $input = $('#' + id + ' .gain-input'),
             $value = $('#' + id + ' .gain-value');
 
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
 
         $input.on('change', function() {
             var gain = parseFloat($(this).val(), 10);
@@ -420,8 +499,8 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             $input = $('#' + id + ' .panner-input'),
             $value = $('#' + id + ' .panner-value');
 
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
 
         $input.on('change', function() {
             var val = parseFloat($(this).val(), 10);
@@ -438,8 +517,8 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
         var id = $node.attr('id'),
             $select = $node.find('.ir-list');
 
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
 
         $select.on('change', function() {
             var $selected = $select.find('option:selected');
@@ -463,8 +542,8 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             $ratioInput = $('#' + id + ' .ratio-input'),
             $ratioValue = $('#' + id + ' .ratio-value');
 
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
 
         $thresholdInput.on('change', function() {
             var val = parseFloat($(this).val(), 10);
@@ -495,8 +574,8 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             $qualityInput = $('#' + id + ' .quality-input'),
             $qualityValue = $('#' + id + ' .quality-value');
 
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
-        jsPlumb.addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, targetEndpoint);
+        addEndpoint(id, { maxConnections: -1 }, sourceEndpoint);
 
         $select.on('change', function() {
             var $selected = $select.find('option:selected');
@@ -505,7 +584,7 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
                 value: $selected.val()
             });
         });
-        
+
         $frequencyInput.on('change', function() {
             var val = parseFloat($(this).val(), 10);
             $frequencyValue.html(val + "Hz");
@@ -534,6 +613,9 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
         addSourceFile: addSourceFile,
         addIRFile: addIRFile,
         createNode: createNode,
+        deleteNode: deleteNode,
+        enableSourceSelect: enableSourceSelect,
+        disableSourceSelect: disableSourceSelect,
         enableSourcePlayButton: enableSourcePlayButton,
         disableSourcePlayButton: disableSourcePlayButton,
         enableSourcePauseButton: enableSourcePauseButton,

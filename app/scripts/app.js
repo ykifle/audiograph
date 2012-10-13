@@ -20,12 +20,44 @@ function(filepicker, audioLab, stageManager, Pubsub) {
     // Predefined IR files for the convolver node
     var defaultImpulseResponseFiles = [
         {
+            name: "Five Columns Long",
+            url: "impulse_response/Five Columns Long.wav"
+        },
+        {
+            name: "Five Columns",
+            url: "impulse_response/Five Columns.wav"
+        },
+        {
+            name: "French 18th Century Salon",
+            url: "impulse_response/French 18th Century Salon.wav"
+        },
+        {
+            name: "Going Home",
+            url: "impulse_response/Going Home.wav"
+        },
+        {
+            name: "In The Silo Revised",
+            url: "impulse_response/In The Silo Revised.wav"
+        },
+        {
             name: "Narrow Bumpy Space",
-            url: "/media/Narrow Bumpy Space.wav"
+            url: "impulse_response/Narrow Bumpy Space.ir"
+        },
+        {
+            name: "Nice Drum Room",
+            url: "impulse_response/Nice Drum Room.wav"
         },
         {
             name: "Parking Garage",
-            url: "/media/Parking Garage.wav"
+            url: "impulse_response/Parking Garage.ir"
+        },
+        {
+            name: "Rays",
+            url: "impulse_response/Rays.wav"
+        },
+        {
+            name: "Trig Room",
+            url: "impulse_response/Trig Room.wav"
         }
     ];
 
@@ -51,6 +83,9 @@ function(filepicker, audioLab, stageManager, Pubsub) {
         });
         Pubsub.subscribe(stageManager.EVENTS.NODE_REQUEST, function(evt, info) {
             audioLab.createNode(info);
+        });
+        Pubsub.subscribe(stageManager.EVENTS.NODE_DELETE, function(evt, info) {
+            audioLab.deleteNode(info.id);
         });
         Pubsub.subscribe(stageManager.EVENTS.SOURCE_PLAY, function(evt, info) {
             audioLab.playSource(info.id);
@@ -130,6 +165,9 @@ function(filepicker, audioLab, stageManager, Pubsub) {
         Pubsub.subscribe(audioLab.EVENTS.NODE_CREATE, function(evt, data) {
             stageManager.createNode(data);
         });
+        Pubsub.subscribe(audioLab.EVENTS.NODE_DELETE, function(evt, data) {
+            stageManager.deleteNode(data);
+        });
         Pubsub.subscribe(audioLab.EVENTS.SOURCE_PLAY, function(evt, info) {
             info.type = 'stop';
             stageManager.enableSourcePauseButton(info);
@@ -152,6 +190,11 @@ function(filepicker, audioLab, stageManager, Pubsub) {
             info.url = info.data.url;
             stageManager.enableSourcePlayButton(info);
             stageManager.setSourceInput(info);
+        });
+        Pubsub.subscribe(audioLab.EVENTS.SOURCE_MIC_SET, function(evt, info) {
+            stageManager.disableSourcePlayButton(info);
+            stageManager.disableSourcePauseButton(info);
+            stageManager.enableSourceSelect(info);
         });
         Pubsub.subscribe(audioLab.EVENTS.CONVOLVER_BUFFER_SET, function(evt, info) {
             info.url = info.data.url;
