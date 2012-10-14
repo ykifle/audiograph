@@ -22,25 +22,98 @@
         </div>
         <div class="node-menu well">
             <div class="node source" data-type="source">
-                Source
+                <div class="face front">
+                    Source
+                    <i class="icon-info-sign"></i>
+                </div>
+                <div class="face back">
+                    <i class="icon-remove"></i>
+                    <h3>Source Node</h3>
+                    <p>The Source node is your input for the audio graph you build. You can upload audio files, or choose to make your own music using a mic.</p>
+                    <p>Right now the mic input can only be used in the Chrome Canary browser. And keep in mind that if you are using your computer's built in mic, make sure you are using headphones or else you will hear some nasty feedback.<p>
+                    <p><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AudioBufferSourceNode">AudioBufferSourceNode Spec</a></p>
+                    <p><a href="http://www.html5rocks.com/en/tutorials/getusermedia/intro/">Tutorial on how to use the mic</a></p>
+                </div>
             </div>
             <div class="node delay" data-type="delay">
-                Delay
+                <div class="face front">
+                    Delay
+                    <i class="icon-info-sign"></i>
+                </div>
+                <div class="face back">
+                    <i class="icon-remove"></i>
+                    <h3>Delay Node</h3>
+                    <p>The Delay node can be used to introduce a delay in your audio signals. You can control the number of seconds a signal is delayed.</p>
+                    <p>Try creating an echo affect using this node!<p>
+                    <p><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#DelayNode">DelayNode Spec</a></p>
+                </div>
             </div>
             <div class="node gain" data-type="gain">
-                Gain
+                <div class="face front">
+                    Gain
+                    <i class="icon-info-sign"></i>
+                </div>
+                <div class="face back">
+                    <i class="icon-remove"></i>
+                    <h3>Gain Node</h3>
+                    <p>The Gain node controls volume.</p>
+                    <p>This node is great for dynamically adding or suppressing the affects of the other node types.</p>
+                    <p><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AudioGainNode">AudioGainNode Spec</a></p>
+                </div>
             </div>
             <div class="node panner" data-type="panner">
-                Panner
+                <div class="face front">
+                    Panner
+                    <i class="icon-info-sign"></i>
+                </div>
+                <div class="face back">
+                    <i class="icon-remove"></i>
+                    <h3>Panner Node</h3>
+                    <p>The Panner node lets you move the direction the sound is coming from left or right.</p>
+                    <p>The Web Audio API AudioPannerNode actually lets you move the origin of the sound anywhere in 3d space. It even lets you give the audio source a velocity and takes care of adding a doppler affect when appropriate!</p>
+                    <p><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#AudioPannerNode">AudioPannerNode Spec</a></p>
+                    <p><a href="http://www.html5rocks.com/en/tutorials/webaudio/positional_audio/">How to use positional audio and WebGL</a></p>
+                </div>
             </div>
             <div class="node convolver" data-type="convolver">
-                Convolver
+                <div class="face front">
+                    Convolver
+                    <i class="icon-info-sign"></i>
+                </div>
+                <div class="face back">
+                    <i class="icon-remove"></i>
+                    <h3>Convolver Node</h3>
+                    <p>The Convolver node lets you make your audio sound like it is being played in different acoustic spaces, like a concert hall or a french 18th century salon, whatever that sounds like.</p>
+                    <p>Use the drop down to select the acoustic space you want to simulate.</p>
+                    <p><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#ConvolverNode">ConvolverNode Spec</a></p>
+                    <p><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#Convolution-section">An in depth look on this magical effect</a></p>
+                </div>
             </div>
             <div class="node compressor" data-type="compressor">
-                Compressor
+                <div class="face front">
+                    Compressor
+                    <i class="icon-info-sign"></i>
+                </div>
+                <div class="face back">
+                    <i class="icon-remove"></i>
+                    <h3>Compressor Node</h3>
+                    <p>The Compressor node balances out the volume of a signal, lowering the volume of the loudest parts and raising the softest parts.</p>
+                    <p>This is usually used right before the destination node to balance out all the input signals.</p>
+                    <p><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#DynamicsCompressorNode-section">DynamicsCompressorNode Spec</a></p>
+                </div>
             </div>
             <div class="node biquad-filter" data-type="biquad_filter">
-                Biquad Filter
+                <div class="face front">
+                    Biquad Filter
+                    <i class="icon-info-sign"></i>
+                </div>
+                <div class="face back">
+                    <i class="icon-remove"></i>
+                    <h3>Biquad Filter Node</h3>
+                    <p>The Biquad Filter node lets you use the common audio filters, like lowpass or highpass.</p>
+                    <p>What to only hear the base of a song? Slap on a low pass filter and set the frequency on the low end.</p>
+                    <p><a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html#BiquadFilterNode-section">BiquadFilterNode Spec</a></p>
+                </div>
             </div>
         </div>
     </div>
