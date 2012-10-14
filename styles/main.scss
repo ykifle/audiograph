@@ -60,12 +60,12 @@ html, body {
     background-color: rgb(255,255,255); // Old browsers
     @include filter-gradient(#ffffff, #e5e5e5, horizontal); // IE6-9 fallback on horizontal gradient
     @include background-image(linear-gradient(left top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%));
-    box-shadow: 3px 3px 13px rgba(51, 51, 51, 0.29);
+    @include box-shadow(3px 3px 13px rgba(51, 51, 51, 0.29));
     border: 1px solid #C5BF92;
-    -webkit-perspective: 1000;
+    @include perspective(1000);
     .node {
         .face {
-            -webkit-backface-visibility: hidden;
+            @include backface-visibility(hidden);
             position: absolute;
         }
         .face.front {
@@ -84,13 +84,13 @@ html, body {
             }
         }
         .face.back {
-            -webkit-transform: rotateY(180deg);
+            @include transform(rotateY(180deg));
             width: 320px;
             padding: 20px;
             background-color: whiteSmoke;
             border-radius: 10px;
             border: 1px solid #C5C5C5;
-            box-shadow: 7px 5px 20px rgba(0, 0, 0, 0.13);
+            @include box-shadow(7px 5px 20px rgba(0, 0, 0, 0.13));
             .icon-remove {
                 position: absolute;
                 top: 6px;
@@ -102,8 +102,11 @@ html, body {
                 };
             }
         }
-        -webkit-transform-style: preserve-3d;
-        -webkit-transition: 0.5s;
+        @include transform-style(preserve-3d);
+        -webkit-transition: -webkit-transform 0.5s;
+        -moz-transition: -moz-transform 0.5s;
+        -o-transition: -o-transform 0.5s;
+        transition: transform 0.5s;
         width: 130px;
         height: 42px;
         position: relative;
@@ -116,7 +119,7 @@ html, body {
         .front .icon-info-sign {
             display: none;
         }
-        -webkit-transform: rotateY(-180deg) translate(-390px, 0px);
+        @include transform(rotateY(-180deg) translate(-390px, 0px));
     }
 }
 
@@ -161,10 +164,7 @@ html, body {
             width: 0%;
             height: 100%;
             background-color: blue;
-            transition: width 1s;
-            -moz-transition: width 1s; /* Firefox 4 */
-            -webkit-transition: width 1s; /* Safari and Chrome */
-            -o-transition: width 1s; /* Opera */
+            @include transition(width 1s);
         }
     }
     .delay {

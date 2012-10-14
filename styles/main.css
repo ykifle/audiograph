@@ -2170,7 +2170,7 @@ table .span24 {
   *margin-right: .3em;
   line-height: 14px;
   vertical-align: text-top;
-  background-image: url('/images/glyphicons-halflings.png');
+  background-image: url('../images/glyphicons-halflings.png');
   background-position: 14px 14px;
   background-repeat: no-repeat;
   margin-top: 1px;
@@ -2185,7 +2185,7 @@ table .span24 {
 .dropdown-menu > li > a:hover > [class*=" icon-"],
 .dropdown-menu > .active > a > [class^="icon-"],
 .dropdown-menu > .active > a > [class*=" icon-"] {
-  background-image: url('/images/glyphicons-halflings-white.png');
+  background-image: url('../images/glyphicons-halflings-white.png');
 }
 
 /* line 42, ../../app/styles/compass_twitter_bootstrap/_sprites.scss */
@@ -6182,14 +6182,27 @@ html, body {
   background-image: -moz-linear-gradient(left top, #ffffff 0%, #e5e5e5 100%);
   background-image: -o-linear-gradient(left top, #ffffff 0%, #e5e5e5 100%);
   background-image: linear-gradient(left top, #ffffff 0%, #e5e5e5 100%);
+  -webkit-box-shadow: 3px 3px 13px rgba(51, 51, 51, 0.29);
+  -moz-box-shadow: 3px 3px 13px rgba(51, 51, 51, 0.29);
   box-shadow: 3px 3px 13px rgba(51, 51, 51, 0.29);
   border: 1px solid #C5BF92;
   -webkit-perspective: 1000;
+  -moz-perspective: 1000;
+  -ms-perspective: 1000;
+  -o-perspective: 1000;
+  perspective: 1000;
 }
 /* line 66, ../../app/styles/main.scss */
 .node-menu .node {
   -webkit-transform-style: preserve-3d;
-  -webkit-transition: 0.5s;
+  -moz-transform-style: preserve-3d;
+  -ms-transform-style: preserve-3d;
+  -o-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-transition: -webkit-transform 0.5s;
+  -moz-transition: -moz-transform 0.5s;
+  -o-transition: -o-transform 0.5s;
+  transition: transform 0.5s;
   width: 130px;
   height: 42px;
   position: relative;
@@ -6198,6 +6211,8 @@ html, body {
 /* line 67, ../../app/styles/main.scss */
 .node-menu .node .face {
   -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  backface-visibility: hidden;
   position: absolute;
 }
 /* line 71, ../../app/styles/main.scss */
@@ -6249,11 +6264,17 @@ html, body {
 /* line 86, ../../app/styles/main.scss */
 .node-menu .node .face.back {
   -webkit-transform: rotateY(180deg);
+  -moz-transform: rotateY(180deg);
+  -ms-transform: rotateY(180deg);
+  -o-transform: rotateY(180deg);
+  transform: rotateY(180deg);
   width: 320px;
   padding: 20px;
   background-color: whiteSmoke;
   border-radius: 10px;
   border: 1px solid #C5C5C5;
+  -webkit-box-shadow: 7px 5px 20px rgba(0, 0, 0, 0.13);
+  -moz-box-shadow: 7px 5px 20px rgba(0, 0, 0, 0.13);
   box-shadow: 7px 5px 20px rgba(0, 0, 0, 0.13);
 }
 /* line 94, ../../app/styles/main.scss */
@@ -6270,20 +6291,24 @@ html, body {
   background-color: #C4C4C4;
   cursor: pointer;
 }
-/* line 111, ../../app/styles/main.scss */
+/* line 114, ../../app/styles/main.scss */
 .node-menu .node:last-child {
   margin-bottom: 0;
 }
-/* line 115, ../../app/styles/main.scss */
+/* line 118, ../../app/styles/main.scss */
 .node-menu .node.flipped {
   -webkit-transform: rotateY(-180deg) translate(-390px, 0px);
+  -moz-transform: rotateY(-180deg) translate(-390px, 0px);
+  -ms-transform: rotateY(-180deg) translate(-390px, 0px);
+  -o-transform: rotateY(-180deg) translate(-390px, 0px);
+  transform: rotateY(-180deg) translate(-390px, 0px);
 }
-/* line 116, ../../app/styles/main.scss */
+/* line 119, ../../app/styles/main.scss */
 .node-menu .node.flipped .front .icon-info-sign {
   display: none;
 }
 
-/* line 123, ../../app/styles/main.scss */
+/* line 126, ../../app/styles/main.scss */
 .stage {
   height: 100%;
   background-color: rgba(198, 200, 201, 0.5);
@@ -6297,7 +6322,7 @@ html, body {
   background-size: 150px 150px, 150px 150px;
   background-position: -2px -2px, -2px -2px;
 }
-/* line 135, ../../app/styles/main.scss */
+/* line 138, ../../app/styles/main.scss */
 .stage .destination {
   background-color: white;
   margin: 0 auto;
@@ -6327,7 +6352,7 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 138, ../../app/styles/main.scss */
+/* line 141, ../../app/styles/main.scss */
 .stage .source {
   background-color: 125px;
   margin: 0 auto;
@@ -6357,11 +6382,11 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 140, ../../app/styles/main.scss */
+/* line 143, ../../app/styles/main.scss */
 .stage .source .info-row {
   padding: 8px 0;
 }
-/* line 143, ../../app/styles/main.scss */
+/* line 146, ../../app/styles/main.scss */
 .stage .source .play-stop {
   height: 30px;
   padding: 0 14px;
@@ -6371,11 +6396,11 @@ html, body {
   background-color: green;
   display: inline-block;
 }
-/* line 145, ../../app/styles/main.scss */
+/* line 148, ../../app/styles/main.scss */
 .stage .source .play-stop.disabled {
   background-color: grey;
 }
-/* line 149, ../../app/styles/main.scss */
+/* line 152, ../../app/styles/main.scss */
 .stage .source .pause {
   height: 30px;
   padding: 0 14px;
@@ -6385,28 +6410,25 @@ html, body {
   background-color: yellow;
   display: inline-block;
 }
-/* line 151, ../../app/styles/main.scss */
+/* line 154, ../../app/styles/main.scss */
 .stage .source .pause.disabled {
   background-color: grey;
 }
-/* line 155, ../../app/styles/main.scss */
+/* line 158, ../../app/styles/main.scss */
 .stage .source .progress-bar-container {
   width: 100%;
   height: 20px;
   background-color: grey;
 }
-/* line 160, ../../app/styles/main.scss */
+/* line 163, ../../app/styles/main.scss */
 .stage .source .progress-bar {
   width: 0%;
   height: 100%;
   background-color: blue;
-  transition: width 1s;
-  -moz-transition: width 1s;
-  /* Firefox 4 */
   -webkit-transition: width 1s;
-  /* Safari and Chrome */
+  -moz-transition: width 1s;
   -o-transition: width 1s;
-  /* Opera */
+  transition: width 1s;
 }
 /* line 170, ../../app/styles/main.scss */
 .stage .delay {
