@@ -62,12 +62,61 @@ html, body {
     @include background-image(linear-gradient(left top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%));
     box-shadow: 3px 3px 13px rgba(51, 51, 51, 0.29);
     border: 1px solid #C5BF92;
+    -webkit-perspective: 1000;
     .node {
-        @include node();
+        .face {
+            -webkit-backface-visibility: hidden;
+            position: absolute;
+        }
+        .face.front {
+            @include node();
+            padding: 10px 20px;
+            width: 88px;
+            height: 20px;
+            .icon-info-sign {
+                position: absolute;
+                top: 2px;
+                right: 3px;
+                @include rounded(20px);
+                &:hover {
+                    background-color: white;
+                };
+            }
+        }
+        .face.back {
+            -webkit-transform: rotateY(180deg);
+            width: 320px;
+            padding: 20px;
+            background-color: whiteSmoke;
+            border-radius: 10px;
+            border: 1px solid #C5C5C5;
+            box-shadow: 7px 5px 20px rgba(0, 0, 0, 0.13);
+            .icon-remove {
+                position: absolute;
+                top: 6px;
+                right: 7px;
+                @include rounded(20px);
+                &:hover {
+                    background-color: #C4C4C4;
+                    cursor: pointer;
+                };
+            }
+        }
+        -webkit-transform-style: preserve-3d;
+        -webkit-transition: 0.5s;
+        width: 130px;
+        height: 42px;
+        position: relative;
         margin-bottom: 10px;
         &:last-child {
             margin-bottom: 0;
         };
+    }
+    .node.flipped {
+        .front .icon-info-sign {
+            display: none;
+        }
+        -webkit-transform: rotateY(-180deg) translate(-390px, 0px);
     }
 }
 

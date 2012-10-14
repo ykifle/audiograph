@@ -105,6 +105,13 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
                 helper: "clone",
                 opacity: 0.55
             });
+            // Initialize node menu info animations
+            $(".node-menu").on('click', ".node-menu .node .icon-info-sign", function() {
+                $(this).closest(".node-menu .node").addClass("flipped");
+            });
+            $(".node-menu").on('click', ".node-menu .node .icon-remove", function() {
+                $(this).closest(".node-menu .node").removeClass("flipped");
+            });
 
             var resizeStage = function(event, ui) {
                 var position = ui ? ui.position : $stage.position(),
@@ -166,7 +173,6 @@ function($, jsPlumb, Mustache, Pubsub, destination, source, delay, gain,
             $(window).resize(function() {
                 resizeStage();
             });
-            //$stage.children().not('.node-menu').draggable({handle: $stage});
 
             // Create destination node
             requestNode(NODES.DESTINATION, {

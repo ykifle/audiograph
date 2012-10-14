@@ -6184,9 +6184,24 @@ html, body {
   background-image: linear-gradient(left top, #ffffff 0%, #e5e5e5 100%);
   box-shadow: 3px 3px 13px rgba(51, 51, 51, 0.29);
   border: 1px solid #C5BF92;
+  -webkit-perspective: 1000;
 }
-/* line 65, ../../app/styles/main.scss */
+/* line 66, ../../app/styles/main.scss */
 .node-menu .node {
+  -webkit-transform-style: preserve-3d;
+  -webkit-transition: 0.5s;
+  width: 130px;
+  height: 42px;
+  position: relative;
+  margin-bottom: 10px;
+}
+/* line 67, ../../app/styles/main.scss */
+.node-menu .node .face {
+  -webkit-backface-visibility: hidden;
+  position: absolute;
+}
+/* line 71, ../../app/styles/main.scss */
+.node-menu .node .face.front {
   background-color: white;
   margin: 0 auto;
   padding: 10px 10px;
@@ -6206,22 +6221,69 @@ html, body {
   background-image: -moz-linear-gradient(left top, #d5cea6 0%, #c9c190 40%, #b7ad70 100%);
   background-image: -o-linear-gradient(left top, #d5cea6 0%, #c9c190 40%, #b7ad70 100%);
   background-image: linear-gradient(left top, #d5cea6 0%, #c9c190 40%, #b7ad70 100%);
-  margin-bottom: 10px;
+  padding: 10px 20px;
+  width: 88px;
+  height: 20px;
 }
 /* line 25, ../../app/styles/main.scss */
-.node-menu .node .delete-node {
+.node-menu .node .face.front .delete-node {
   position: absolute;
   top: 5px;
   right: 4px;
   width: 20px;
   height: 20px;
 }
-/* line 68, ../../app/styles/main.scss */
+/* line 76, ../../app/styles/main.scss */
+.node-menu .node .face.front .icon-info-sign {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  border-radius: 20px;
+  -moz-border-radius: 20px;
+  -webkit-border-radius: 20px;
+}
+/* line 81, ../../app/styles/main.scss */
+.node-menu .node .face.front .icon-info-sign:hover {
+  background-color: white;
+}
+/* line 86, ../../app/styles/main.scss */
+.node-menu .node .face.back {
+  -webkit-transform: rotateY(180deg);
+  width: 320px;
+  padding: 20px;
+  background-color: whiteSmoke;
+  border-radius: 10px;
+  border: 1px solid #C5C5C5;
+  box-shadow: 7px 5px 20px rgba(0, 0, 0, 0.13);
+}
+/* line 94, ../../app/styles/main.scss */
+.node-menu .node .face.back .icon-remove {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  border-radius: 20px;
+  -moz-border-radius: 20px;
+  -webkit-border-radius: 20px;
+}
+/* line 99, ../../app/styles/main.scss */
+.node-menu .node .face.back .icon-remove:hover {
+  background-color: #C4C4C4;
+  cursor: pointer;
+}
+/* line 111, ../../app/styles/main.scss */
 .node-menu .node:last-child {
   margin-bottom: 0;
 }
+/* line 115, ../../app/styles/main.scss */
+.node-menu .node.flipped {
+  -webkit-transform: rotateY(-180deg) translate(-390px, 0px);
+}
+/* line 116, ../../app/styles/main.scss */
+.node-menu .node.flipped .front .icon-info-sign {
+  display: none;
+}
 
-/* line 74, ../../app/styles/main.scss */
+/* line 123, ../../app/styles/main.scss */
 .stage {
   height: 100%;
   background-color: rgba(198, 200, 201, 0.5);
@@ -6235,7 +6297,7 @@ html, body {
   background-size: 150px 150px, 150px 150px;
   background-position: -2px -2px, -2px -2px;
 }
-/* line 86, ../../app/styles/main.scss */
+/* line 135, ../../app/styles/main.scss */
 .stage .destination {
   background-color: white;
   margin: 0 auto;
@@ -6265,7 +6327,7 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 89, ../../app/styles/main.scss */
+/* line 138, ../../app/styles/main.scss */
 .stage .source {
   background-color: 125px;
   margin: 0 auto;
@@ -6295,11 +6357,11 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 91, ../../app/styles/main.scss */
+/* line 140, ../../app/styles/main.scss */
 .stage .source .info-row {
   padding: 8px 0;
 }
-/* line 94, ../../app/styles/main.scss */
+/* line 143, ../../app/styles/main.scss */
 .stage .source .play-stop {
   height: 30px;
   padding: 0 14px;
@@ -6309,11 +6371,11 @@ html, body {
   background-color: green;
   display: inline-block;
 }
-/* line 96, ../../app/styles/main.scss */
+/* line 145, ../../app/styles/main.scss */
 .stage .source .play-stop.disabled {
   background-color: grey;
 }
-/* line 100, ../../app/styles/main.scss */
+/* line 149, ../../app/styles/main.scss */
 .stage .source .pause {
   height: 30px;
   padding: 0 14px;
@@ -6323,17 +6385,17 @@ html, body {
   background-color: yellow;
   display: inline-block;
 }
-/* line 102, ../../app/styles/main.scss */
+/* line 151, ../../app/styles/main.scss */
 .stage .source .pause.disabled {
   background-color: grey;
 }
-/* line 106, ../../app/styles/main.scss */
+/* line 155, ../../app/styles/main.scss */
 .stage .source .progress-bar-container {
   width: 100%;
   height: 20px;
   background-color: grey;
 }
-/* line 111, ../../app/styles/main.scss */
+/* line 160, ../../app/styles/main.scss */
 .stage .source .progress-bar {
   width: 0%;
   height: 100%;
@@ -6346,7 +6408,7 @@ html, body {
   -o-transition: width 1s;
   /* Opera */
 }
-/* line 121, ../../app/styles/main.scss */
+/* line 170, ../../app/styles/main.scss */
 .stage .delay {
   background-color: 100px;
   margin: 0 auto;
@@ -6376,7 +6438,7 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 128, ../../app/styles/main.scss */
+/* line 177, ../../app/styles/main.scss */
 .stage .gain {
   background-color: 100px;
   margin: 0 auto;
@@ -6406,7 +6468,7 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 135, ../../app/styles/main.scss */
+/* line 184, ../../app/styles/main.scss */
 .stage .panner {
   background-color: 100px;
   margin: 0 auto;
@@ -6436,7 +6498,7 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 142, ../../app/styles/main.scss */
+/* line 191, ../../app/styles/main.scss */
 .stage .convolver {
   background-color: 100px;
   margin: 0 auto;
@@ -6466,7 +6528,7 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 145, ../../app/styles/main.scss */
+/* line 194, ../../app/styles/main.scss */
 .stage .compressor {
   background-color: 150px;
   margin: 0 auto;
@@ -6496,7 +6558,7 @@ html, body {
   width: 20px;
   height: 20px;
 }
-/* line 148, ../../app/styles/main.scss */
+/* line 197, ../../app/styles/main.scss */
 .stage .biquad-filter {
   background-color: 200px;
   margin: 0 auto;
